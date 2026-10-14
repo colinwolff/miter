@@ -5,6 +5,13 @@ All notable changes to `miter` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha.2] - 2026-10-14
+
+### Fixed
+- **CSS scanner (`polyglot/css`)**: `/* … */` block comments and SCSS `//` end-of-line comments are now masked before selectors and custom properties are read. Every non-newline character inside a comment is replaced with a space `' '` and `\n` is preserved, so byte spans and 1-based line numbers stay exact. Comment prose such as `/* docs/style.css */` or `// theme.config.css` no longer registers phantom class selectors (`.css`, `.config`, `.1`).
+- **CSS scanner (`polyglot/css`)**: quoted strings and `url(...)` functions are skipped while tokenising a selector prelude, so a value like `[href^="v1.0.0"]` no longer yields `.1`/`.0`, and a `var(--token)` written inside a comment is no longer indexed as a reference.
+- **HTML scanner (`polyglot/html`)**: a start tag now opens only when `<` is immediately followed by an ASCII letter. Comparisons and text arrows (`<-`, `<=`, `< 250`) and closing tags (`</…`) are ignored, so none can register as a custom element. Comments (`<!-- … -->`), declarations (`<!DOCTYPE …>`) and `script`/`style` raw-text bodies are skipped whole, and custom element names must start with a lowercase letter, contain a hyphen and use only `[a-z0-9._-]`.
+
 ## [0.1.0-alpha.1] - 2026-10-13
 
 ### Added

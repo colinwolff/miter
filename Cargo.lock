@@ -445,7 +445,7 @@ dependencies = [
 
 [[package]]
 name = "miter-ast"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "indicatif",
  "tree-sitter",
@@ -456,7 +456,7 @@ dependencies = [
 
 [[package]]
 name = "miter-cli"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "clap",
  "indicatif",
@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "miter-engine"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "dockerfile-parser",
  "globset",
@@ -492,7 +492,7 @@ dependencies = [
 
 [[package]]
 name = "miter-harness"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -503,7 +503,7 @@ dependencies = [
 
 [[package]]
 name = "miter-mcp"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "miter-engine",
  "miter-harness",
@@ -516,7 +516,7 @@ dependencies = [
 
 [[package]]
 name = "miter-storage"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "redb",
  "serde",

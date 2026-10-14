@@ -94,3 +94,50 @@ fn scss_files_are_stylesheets_too() {
     assert_eq!(symbols.len(), 1);
     assert_eq!(symbols[0].name, ".grid");
 }
+
+#[test]
+fn comment_prose_is_not_a_selector_list() {
+    let source = "\
+/* docs/style.css - v0.1.0 */
+.card { color: var(--brand); }
+
+// theme.config.css
+.grid { gap: var(--space-sm); }
+";
+    let symbols = extract_css_symbols(Path::new("docs/style.css"), source);
+    let names: Vec<&str> = symbols.iter().map(|s| s.name.as_str()).collect();
+    for phantom in [".css", ".1", ".0", ".config"] {
+        assert!(
+            !names.contains(&phantom),
+            "{phantom} leaked from a comment: {names:?}"
+        );
+    }
+    assert_eq!(names, vec![".card", ".grid"]);
+    let line_of = |name: &str| symbols.iter().find(|s| s.name == name).unwrap().line;
+    assert_eq!(
+        line_of(".card"),
+        2,
+        "the rule below the block comment keeps its line"
+    );
+    assert_eq!(
+        line_of(".grid"),
+        5,
+        "the rule below the line comment keeps its line"
+    );
+}
+
+#[test]
+fn dots_inside_strings_and_urls_are_not_selectors() {
+    let source = "a[href^=\"v1.0.0\"] { color: red; }\n";
+    let symbols = extract_css_symbols(Path::new("a.css"), source);
+    assert!(symbols.is_empty(), "{symbols:?}");
+}
+
+#[test]
+fn a_url_is_not_a_line_comment() {
+    let source = "@import url(https://cdn.example/v1.0.0/x.css);\n.card { color: red; }\n";
+    let symbols = extract_css_symbols(Path::new("a.css"), source);
+    assert_eq!(symbols.len(), 1, "{symbols:?}");
+    assert_eq!(symbols[0].name, ".card");
+    assert_eq!(symbols[0].line, 2);
+}

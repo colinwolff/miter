@@ -13,13 +13,21 @@ use std::path::Path;
 
 use super::{Language, SymbolKind, UniversalSymbol, common};
 
+mod mask;
+
+pub(crate) use mask::mask_comments;
+use mask::{skip_quoted, skip_url, url_open_at};
+
 /// Extracts the names a stylesheet declares.
 #[must_use]
 pub fn extract_css_symbols(path: &Path, source: &str) -> Vec<UniversalSymbol> {
     let module = common::module_path(path);
+    // Every scan runs over the comment-masked text so prose never reads as a selector, while
+    // offsets are sliced from the original so signatures and line numbers stay exact.
+    let masked = mask_comments(source);
     let mut declared: BTreeMap<String, (usize, SymbolKind, String)> = BTreeMap::new();
 
-    for (offset, name, value) in custom_properties(source) {
+    for (offset, name, value) in custom_properties(&masked, source) {
         let signature = format!(
             "{name}: {}",
             crate::security::scrub_source_text(value.trim())
@@ -31,7 +39,7 @@ pub fn extract_css_symbols(path: &Path, source: &str) -> Vec<UniversalSymbol> {
         ));
     }
 
-    for (offset, keyword, name) in at_rules(source) {
+    for (offset, keyword, name) in at_rules(&masked) {
         let kind = if keyword == "keyframes" {
             SymbolKind::Function
         } else {
@@ -44,7 +52,7 @@ pub fn extract_css_symbols(path: &Path, source: &str) -> Vec<UniversalSymbol> {
         ));
     }
 
-    for (offset, token) in selectors(source) {
+    for (offset, token) in selectors(&masked) {
         let kind = if token.starts_with('#') {
             SymbolKind::Property
         } else {
@@ -80,21 +88,24 @@ pub fn extract_css_symbols(path: &Path, source: &str) -> Vec<UniversalSymbol> {
 }
 
 /// Every `--name: value` declaration, in source order.
-fn custom_properties(source: &str) -> Vec<(usize, &str, &str)> {
+///
+/// Positions are found in the comment-masked text but the name and value are sliced from
+/// `source`, so a signature is never a row of masking spaces.
+fn custom_properties<'a>(masked: &str, source: &'a str) -> Vec<(usize, &'a str, &'a str)> {
     let mut out = Vec::new();
     let mut index = 0usize;
-    while let Some(offset) = source[index..].find("--") {
+    while let Some(offset) = masked[index..].find("--") {
         let start = index + offset;
-        let name_len = ident_len(&source[start..]);
+        let name_len = ident_len(&masked[start..]);
         let after = start + name_len;
         if name_len > 2
-            && source[after..].trim_start().starts_with(':')
-            && !source[start..after].contains(char::is_whitespace)
+            && masked[after..].trim_start().starts_with(':')
+            && !masked[start..after].contains(char::is_whitespace)
         {
-            let colon = after + source[after..].find(':').unwrap_or(0);
-            let value_end = source[colon + 1..]
+            let colon = after + masked[after..].find(':').unwrap_or(0);
+            let value_end = masked[colon + 1..]
                 .find([';', '}', '\n'])
-                .map_or(source.len(), |at| colon + 1 + at);
+                .map_or(masked.len(), |at| colon + 1 + at);
             out.push((start, &source[start..after], &source[colon + 1..value_end]));
             index = value_end;
         } else {
@@ -150,11 +161,22 @@ fn selectors(source: &str) -> Vec<(usize, &str)> {
 }
 
 /// The `.class` and `#id` tokens of a selector prelude.
+///
+/// Quoted strings and `url(...)` functions are skipped: their dots are values
+/// (`[href^="v1.0.0"]`), not selectors.
 fn tokens(prelude: &str) -> Vec<(usize, &str)> {
     let mut out = Vec::new();
     let bytes = prelude.as_bytes();
     let mut index = 0usize;
     while index < bytes.len() {
+        if bytes[index] == b'"' || bytes[index] == b'\'' {
+            index = skip_quoted(bytes, index);
+            continue;
+        }
+        if url_open_at(bytes, index) {
+            index = skip_url(bytes, index);
+            continue;
+        }
         if bytes[index] == b'.' || bytes[index] == b'#' {
             let len = ident_len(&prelude[index + 1..]);
             if len > 0 {

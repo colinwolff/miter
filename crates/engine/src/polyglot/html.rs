@@ -40,7 +40,7 @@ pub fn extract_html_symbols(path: &Path, source: &str) -> Vec<UniversalSymbol> {
                 offset,
             ));
         }
-        if tag.name.contains('-') {
+        if is_custom_element(tag.name) {
             symbols.push(declaration(
                 path,
                 &module,
@@ -128,17 +128,27 @@ fn tags(source: &str) -> Vec<Tag<'_>> {
     while let Some(offset) = source[index..].find('<') {
         let start = index + offset;
         let rest = &source[start + 1..];
+        // A comment is skipped whole: `<` and `>` inside its prose are text, not markup.
+        if rest.starts_with("!--") {
+            index = source[start..]
+                .find("-->")
+                .map_or(source.len(), |end| start + end + 3);
+            continue;
+        }
+        // A declaration (`<!DOCTYPE …>`) has no tag name and no attributes.
         if rest.starts_with('!') {
             index = start + 1 + rest.find('>').map_or(rest.len(), |end| end + 1);
+            continue;
+        }
+        // A start tag opens only when `<` is followed by an ASCII letter; `<-`, `<=`,
+        // `< 250` and a closing `</…` are text, not tags.
+        if !rest.starts_with(|c: char| c.is_ascii_alphabetic()) {
+            index = start + 1;
             continue;
         }
         let name_len = rest
             .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ':'))
             .unwrap_or(rest.len());
-        if name_len == 0 {
-            index = start + 1;
-            continue;
-        }
         let name = &rest[..name_len];
         let body_len = rest.find('>').unwrap_or(rest.len());
         out.push(Tag {
@@ -157,6 +167,19 @@ fn tags(source: &str) -> Vec<Tag<'_>> {
         }
     }
     out
+}
+
+/// `true` for a custom element name: a lowercase start, a mandatory hyphen and ASCII tag
+/// characters only, as the HTML spec defines them.
+///
+/// The guard is what stops a bare `<` in text — `<-`, `<=`, `< 250` — from ever registering as a
+/// component, because none of those carry a lowercase letter before the hyphen.
+fn is_custom_element(name: &str) -> bool {
+    matches!(name.as_bytes().first(), Some(byte) if byte.is_ascii_lowercase())
+        && name.contains('-')
+        && name.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'_' | b'-')
+        })
 }
 
 /// Reads the `name="value"` pairs of one tag body, with the offset each value starts at.

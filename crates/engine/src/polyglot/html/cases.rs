@@ -81,3 +81,32 @@ fn attribute_values_survive_quoting_styles() {
     let symbols = extract_html_symbols(Path::new("a.html"), source);
     assert_eq!(symbols[0].name, "single");
 }
+
+#[test]
+fn comment_prose_and_comparisons_are_not_tags() {
+    let source = "\
+<!-- <fake-comment-tag id=\"ghost\"> -->
+<p>x <- y and count < 250</p>
+<my-widget id=\"real\"></my-widget>
+";
+    let symbols = extract_html_symbols(Path::new("a.html"), source);
+    let names: Vec<&str> = symbols.iter().map(|s| s.name.as_str()).collect();
+    for ghost in ["fake-comment-tag", "ghost", "-"] {
+        assert!(
+            !names.contains(&ghost),
+            "{ghost} leaked from markup: {names:?}"
+        );
+    }
+    let widget = symbols
+        .iter()
+        .find(|s| s.name == "my-widget")
+        .expect("the real custom element");
+    assert_eq!(widget.kind, SymbolKind::Class);
+    assert_eq!(widget.signature, "ELEMENT <my-widget>");
+    assert_eq!(widget.line, 3);
+    let real = symbols
+        .iter()
+        .find(|s| s.name == "real")
+        .expect("the real id");
+    assert_eq!(real.line, 3);
+}

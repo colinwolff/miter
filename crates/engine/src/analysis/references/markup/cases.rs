@@ -29,6 +29,15 @@ fn a_css_var_call_is_a_reference_to_the_token() {
 }
 
 #[test]
+fn a_var_call_inside_a_comment_is_not_a_reference() {
+    let source = "/* var(--ghost) */\n.card { color: var(--brand); }\n";
+    let refs = css("a.css", source);
+    let names: Vec<&str> = refs.iter().map(|(name, _)| name.as_str()).collect();
+    assert_eq!(names, vec!["--brand"], "a commented var is not a reference");
+    assert_eq!(refs[0].1.line_range, (2, 2), "line numbers stay exact");
+}
+
+#[test]
 fn sql_table_clauses_are_references() {
     let source = "CREATE TABLE posts (\n  author_id INTEGER REFERENCES users(id)\n);\nSELECT * FROM posts JOIN users ON users.id = posts.author_id;\n";
     let refs = sql("migrations/001.sql", source);

@@ -36,17 +36,22 @@ pub(super) fn html(file_path: &str, source: &str) -> Vec<(String, ReferenceEntry
 }
 
 /// References in a stylesheet: every `var(--token)` call.
+///
+/// The scan runs over the comment-masked text so a `var(--ghost)` written inside a comment is
+/// not a reference, while the offsets (and so the line numbers) stay exact because masking keeps
+/// the source length.
 #[must_use]
 pub(super) fn css(file_path: &str, source: &str) -> Vec<(String, ReferenceEntry)> {
+    let masked = crate::polyglot::css::mask_comments(source);
     let mut out = Vec::new();
     let mut index = 0usize;
-    while let Some(found) = source[index..].find("var(") {
+    while let Some(found) = masked[index..].find("var(") {
         let call = index + found;
         let open = call + "var(".len();
-        let close = source[open..]
+        let close = masked[open..]
             .find(')')
-            .map_or(source.len(), |at| open + at);
-        let argument = source[open..close].trim();
+            .map_or(masked.len(), |at| open + at);
+        let argument = masked[open..close].trim();
         // `var(--brand, #3b82f6)` — the fallback after the comma is a value, not a reference.
         let token = argument.split(',').next().unwrap_or("").trim();
         if token.starts_with("--") {
