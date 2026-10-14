@@ -1,0 +1,39 @@
+[package]
+name = "miter-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AST storage and analysis engine: polyglot model, hydration, audit, slices, clones, contracts and secret redaction"
+readme = "../../README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+miter-ast.workspace = true
+# The canonical redb tables and the schema handshake: the record layer here is *built on*
+# this crate's tables rather than declaring its own.
+miter-storage.workspace = true
+rayon.workspace = true
+# The polyglot harness drives tree-sitter directly rather than through `miter-ast`, which is a
+# *function*-shaped reader: a universal visitor has to see a `struct`, an `interface` or a
+# decorated `def`, and it has to know each node's hierarchy level. The grammars themselves stay
+# declared once, in `miter-ast`, and are reached through `miter_ast::grammar_for(language)` — so
+# this crate needs the runtime and none of the four grammar crates, and there is exactly one
+# table saying which grammar reads which language.
+tree-sitter.workspace = true
+redb.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlparser = { workspace = true }
+hcl = { workspace = true }
+dockerfile-parser = { workspace = true }
+serde_yaml = { workspace = true }
+globset = { workspace = true }
+toml = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,50 @@
+# The workspace's `cargo-nextest` configuration.
+#
+# `cargo-nextest` is the *preferred* runner of the test gate (`scripts/test.sh` uses it when it
+# is on `PATH` and falls back to `cargo test` when it is not), because the two runners schedule
+# differently and the difference is the whole point of this file:
+#
+# * `cargo test` runs **one test binary at a time**. libtest parallelises the tests *inside* a
+#   binary, but cargo waits for the binary to exit before it starts the next one, so the gate
+#   pays the process startup, the fixture setup and the drain of every suite in sequence.
+# * `cargo-nextest` runs **one process per test** and schedules the tests of every binary in the
+#   workspace across one thread pool, so a suite with three tests no longer holds the gate open
+#   while another suite's forty tests wait their turn.
+#
+# Install it once with `cargo install cargo-nextest --locked`.
+[store]
+# Where nextest keeps its run records and its per-profile state. `target/` is ignored by git, and
+# the default is the same directory: it is written out so the intent survives a default change.
+dir = "target/nextest"
+
+[profile.default]
+# **No retries.** A retry is how a CI runner tells a flake from a regression; locally it only
+# hides the difference and re-runs the expensive tests this profile exists to run once. A run that
+# wants the CI behaviour passes the flag: `cargo nextest run --retries 2`.
+retries = 0
+# One test per logical core. nextest's default is already `num-cpus`; the oversubscription it
+# prevents is nextest's own, because a test that compiles a fixture and a test that runs a solver
+# are both CPU-bound and neither wants to share a core with three siblings.
+test-threads = "num-cpus"
+# Report every failure of a run instead of stopping at the first: a gate that hides the other
+# twelve failures behind the first one is a gate you run thirteen times.
+fail-fast = false
+# `status-level = "pass"` keeps the one-line PASS rows, which is what a reader scans for a
+# regression in a suite that used to pass; `final-status-level = "fail"` keeps the closing
+# summary to what actually went wrong.
+status-level = "pass"
+final-status-level = "fail"
+# Failure output is printed as soon as the test fails (and once more at the end), because the
+# interesting part of a failing test is its assertion message.
+failure-output = "immediate-final"
+# A passing test's stdout is dropped. The workspace's tests print their tables unconditionally,
+# and a run that echoes all of them buries the failures. `cargo nextest run --no-capture` streams
+# everything — serially, since that is what capturing buys.
+success-output = "never"
+# A test that is still running after ten minutes is not slow, it is stuck, so it is reported at
+# ten minutes and killed at twenty.
+slow-timeout = { period = "600s", terminate-after = 2 }
+# Do not wait on a child process that inherited the test's stdout: a test that starts the `miter`
+# binary and forgets to reap it would otherwise be reported as leaky only after the default
+# timeout expires.
+leak-timeout = "200ms"

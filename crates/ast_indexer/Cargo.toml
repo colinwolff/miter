@@ -1,0 +1,32 @@
+[package]
+name = "miter-ast"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Tree-sitter AST ingestion: functions, inputs and return types with their provenance and nesting depth"
+readme = "../../README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+tree-sitter.workspace = true
+tree-sitter-rust.workspace = true
+# `progress` owns the `Indexing {pos}/{len} files | {msg}` bar an ingestion drives from
+# its parallel workers. The crate is where the *trait* an ingestion reports through lives, so the
+# bar and the thing it reports on cannot drift apart.
+indicatif.workspace = true
+# The TypeScript grammar crate covers all three of this crate's TypeScript-family
+# languages: `LANGUAGE_TYPESCRIPT` for `.ts`, `LANGUAGE_TSX` for `.tsx` and for
+# JavaScript (the TSX grammar is a superset of the JSX Javascript dialects this
+# indexer reads).
+tree-sitter-typescript.workspace = true
+# The Python grammar. `LANGUAGE` is the plain Python grammar of `tree-sitter-python`,
+# and no other crate links a second copy of it (the workspace root pins the version).
+tree-sitter-python.workspace = true
+
+[lints]
+workspace = true

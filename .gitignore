@@ -1,0 +1,85 @@
+# =====================================================================
+# Rust / Cargo Build Artifacts
+# =====================================================================
+target/
+**/*.rs.bk
+Cargo.lock.backup
+
+# =====================================================================
+# Local Database & Embedded Store Files
+# =====================================================================
+# redb files
+*.redb
+*.redb.lock
+
+# The workspace's own index: the database is a build artifact of `miter index .`,
+# and the config is the one file worth sharing.
+.miter/*
+!.miter/config.toml
+
+# SQLite database files and logs
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Memory-mapped flat files and binary vector slabs
+*.mmap
+*.bin
+*.vec
+
+# =====================================================================
+# Criterion Benchmarks & Profiling
+# =====================================================================
+# Benchmark output reports
+target/criterion/
+*.profdata
+*.profraw
+flamegraph.svg
+perf.data
+perf.data.old
+
+# =====================================================================
+# AI Agent & Editor Ephemera (Cline, Antigravity, Cursor, Copilot)
+# =====================================================================
+# Cline / Cursor task history and state
+.cline/
+.cursor/
+.cursorrules.local
+.antigravity/
+
+# Task scratchpads & local debug logs
+*.log
+agent_scratchpad.md
+agent_todo.md
+
+# =====================================================================
+# IDEs & System Files
+# =====================================================================
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains / RustRover
+.idea/
+*.iml
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# =====================================================================
+# Environment & Local Secrets
+# =====================================================================
+.env
+.env.*
+!.env.example
+
+# Local binaries and toolchains
+bin/

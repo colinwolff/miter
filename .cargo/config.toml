@@ -1,0 +1,90 @@
+[build]
+# Structure inner math loops so LLVM can auto-vectorize them for the host CPU
+# (AVX2/AVX-512 on x86_64, NEON on aarch64).
+rustflags = ["-C", "target-cpu=native"]
+
+# No `rustc-wrapper` is set here. `rustc-wrapper = "sccache"` in a committed config
+# makes `cargo build` fail for anyone who has cloned the repository without
+# installing sccache, so the cache is opt-in per *run* instead:
+#     RUSTC_WRAPPER=sccache cargo build
+
+# Apple platforms: the tree-sitter grammar objects are compiled with a newer
+# `-mmacosx-version-min` than rustc's default, which makes the linker emit a
+# deployment-target warning. Pinning the deployment target for the final link
+# keeps the build warning-free — at `13.1`, the value the grammar objects were
+# built for, *not* a lower one, which would reintroduce the warning. Writing the
+# target as a `cfg` also covers both Apple architectures (x86_64 and aarch64)
+# without duplicating the block per triple. Target-specific flags replace
+# `build.rustflags`, so `target-cpu=native` is repeated here.
+#
+# The *linker* is deliberately not named here. rustc already links through `cc` →
+# `ld64` (820.1 on this toolchain, Apple clang 14), `-fuse-ld=lld` needs an
+# `ld64.lld` that is not installed, and `-Wl,-dead_strip` was measured to change
+# nothing at all on these binaries (byte-identical output; see the README's
+# "Toolchain notes"). A fast linker is opt-in per *run* instead, through
+# `MITER_FAST_LINKER=lld|mold|auto` in `scripts/test.sh`, because a cargo config
+# cannot ask whether the tool exists and a config that names a missing linker
+# fails every link rather than falling back.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "target-cpu=native", "-C", "link-arg=-mmacosx-version-min=13.1"]
+
+# Fast linking during iterative development on macOS: `split-debuginfo` writes a
+# `.dSYM` bundle next to the binary instead of embedding the debug info, which is
+# also the rustc default for Mach-O targets — it is stated explicitly here so the
+# intent survives a future default change and so Linux checkouts, where the
+# default is `packed`, behave the same. Cargo only reads `profile` tables from a
+# config file for the top-level profiles.
+#
+# The cost of `unpacked` is that rustc keeps one `.rcgu.o` per codegen unit in
+# `target/*/deps/`; nothing ever reads them again, and in a directory of six
+# figures of entries *starting* a binary costs about a second of wall clock with
+# no CPU spent. `scripts/prune.sh` sweeps them and the README records the
+# measurement (394.6 s → 62.2 s for the same nextest run).
+[profile.dev]
+split-debuginfo = "unpacked"
+incremental = false
+
+[profile.test]
+split-debuginfo = "unpacked"
+incremental = false
+
+[alias]
+# Fast gate: every standard (non-ignored) test in the workspace, with output passed straight
+# through (`--nocapture`), so a completion prints as it happens instead of arriving in one
+# chunky block when the test binary exits.
+#
+# The same two gates are available under `cargo-nextest` (`xnextest`/`xnextest-full`), which is
+# what `scripts/test.sh` prefers when it is installed: nextest runs one process per *test* and
+# schedules the whole workspace's tests across one pool, where `cargo test` runs one test
+# *binary* at a time. The profile both aliases run under is `.config/nextest.toml`.
+#
+# A cargo alias cannot branch on what is installed — and the `!`-shell form is not implemented
+# by cargo 1.98 (see `prune` below) — so the choice between the runners lives in
+# `scripts/test.sh`, and the aliases name one runner each. Both halves of the pair run the same
+# tests: nextest runs no doctests, so the script runs those with `cargo test --doc`.
+xtest = "test --workspace --all-features -- --nocapture"
+# The same gate in release, where the compiler-verification fixtures are fast enough to be
+# worth running against optimised code. Expect a one-time release build of the workspace the
+# first time this runs.
+xtest-full = "test --release --workspace --all-features -- --include-ignored --nocapture"
+# The same two gates under cargo-nextest (`cargo install cargo-nextest --locked`).
+xnextest = "nextest run --workspace --all-features"
+xnextest-full = "nextest run --release --workspace --all-features --run-ignored=all"
+xclippy = "clippy --workspace --all-targets --all-features -- -D warnings"
+# Disk hygiene. `prune` is `cargo-sweep`'s week-based sweep and `prune-all` its
+# every-installed-target sweep; both need the tool once with `cargo install cargo-sweep`.
+#
+# The workspace's *own* pruner — the incremental caches, the `.dSYM` bundles
+# `split-debuginfo` leaves behind, and the temp logs and mock databases a gate run scatters —
+# is `scripts/prune.sh`, run from the workspace root. It is deliberately not written as an
+# alias, because the `!`-shell-alias form cannot work here: cargo 1.98.1 does not implement
+# it (`[alias] probe = "!echo hi"` fails with ``no such command: `!echo` ``, and the bundled
+# reference documents `[alias]` as cargo subcommands only), so `prune = "!bash
+# scripts/prune.sh"` resolves to a subcommand named `!bash` and errors instead of running.
+# Verified on this toolchain: `bash scripts/prune.sh` exits 0 and prints Before/After.
+#
+# A shim on `PATH` is the one cargo-supported way to make `cargo prune` *start* the script —
+# cargo dispatches to an executable named `cargo-prune` (verified with an isolated `PATH`) —
+# but it would be shadowed by the alias below, so the alias stays a sweep.
+prune = "sweep --time 7"
+prune-all = "sweep --installed"

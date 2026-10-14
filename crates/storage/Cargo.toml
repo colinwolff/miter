@@ -1,0 +1,35 @@
+[package]
+name = "miter-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Canonical redb tables, schema versioning and auto-purge recovery for the miter workspace database"
+readme = "../../README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+# The embedded key-value store every table here is defined against. It is the *only*
+# dependency this crate needs to be useful, which is the point of the extraction: a tool
+# that wants to inspect a workspace's state links this and nothing else.
+redb.workspace = true
+# The meta row is a self-describing JSON document (it is the engine's `DatabaseHeader`),
+# so storage reads it as one value rather than as a struct it would have to keep in sync.
+serde_json.workspace = true
+# The schema records (`IndexedFileRecord`, `ReferenceEntry`) are typed rows this crate owns
+# outright rather than documents a caller wrote, so `schema` derives `Serialize`/`Deserialize` on
+# them instead of treating every value as opaque bytes.
+serde.workspace = true
+# The auto-purge says *why* it purged, and the reason has to reach a human.
+tracing.workspace = true
+
+# There are deliberately no dev-dependencies: the workspace's own crates hand-roll a `TempDir`
+# rather than pull one in for it, and this crate follows
+# the same rule.
+
+[lints]
+workspace = true

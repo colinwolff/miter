@@ -1,0 +1,31 @@
+[package]
+name = "miter-harness"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Deterministic compiler verification: sandboxed git worktrees and diagnostic parsing for `miter verify`"
+readme = "../../README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+# The outcome type crosses a process boundary (a JSON report on stdout, a verdict the CLI
+# persists), so it has to be serialisable, and every failure has to be a variant a caller can
+# branch on rather than a formatted string.
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+# Progress reporting for a loop that shells out to a compiler: an iteration boundary is the
+# only event worth a span, and `tracing` is already the workspace's answer to that question.
+tracing.workspace = true
+# `process` spawns the compiler (`cargo`, `tsc`), `fs` reads the file a diagnostic span points
+# into, and `time` bounds a run. Each is named explicitly because the workspace tokio is pruned
+# with `default-features = false` and these are not in its set.
+tokio = { workspace = true, features = ["process", "fs", "time", "rt"] }
+
+[lints]
+workspace = true

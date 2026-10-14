@@ -1,0 +1,132 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/ast_indexer",
+    "crates/engine",
+    "crates/storage",
+    "crates/harness",
+    "crates/mcp",
+]
+
+[workspace.package]
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.90"
+license = "Apache-2.0"
+authors = ["Colin Wolff"]
+description = "Deterministic AST co-processor and Model Context Protocol (MCP) server"
+keywords = ["ast", "mcp", "tree-sitter", "refactoring", "code-analysis"]
+categories = ["development-tools", "command-line-utilities"]
+# `repository`/`homepage` are what `cargo publish` looks for when it warns that a manifest
+# "has no documentation, homepage or repository"; both name the canonical remote.
+repository = "https://github.com/colinwolff/miter"
+homepage = "https://github.com/colinwolff/miter"
+
+[workspace.dependencies]
+miter-ast = { path = "crates/ast_indexer", version = "0.1.0-alpha.1" }
+miter-engine = { path = "crates/engine", version = "0.1.0-alpha.1" }
+miter-storage = { path = "crates/storage", version = "0.1.0-alpha.1" }
+miter-harness = { path = "crates/harness", version = "0.1.0-alpha.1" }
+miter-mcp = { path = "crates/mcp", version = "0.1.0-alpha.1" }
+
+# Parallel query pipeline.
+rayon = "1.12"
+# AST ingestion.
+tree-sitter = "0.24"
+tree-sitter-rust = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-python = "0.23"
+# Embedded persistence.
+redb = "4.3"
+clap = { version = "4", features = ["derive", "string"] }
+indicatif = { version = "0.17", features = ["rayon"] }
+
+tokio = { version = "1.38", default-features = false, features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "sync",
+    "signal",
+    "time",
+    "io-util",
+] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "env-filter",
+    "fmt",
+] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlparser = { version = "0.54", default-features = false }
+hcl = { version = "0.18", package = "hcl-rs" }
+dockerfile-parser = "0.9"
+serde_yaml = "0.9"
+thiserror = "2.0"
+globset = "0.4"
+toml = "1.1"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[package]
+name = "miter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "miter"
+path = "src/main.rs"
+
+[dependencies]
+miter-ast.workspace = true
+miter-engine.workspace = true
+miter-storage.workspace = true
+miter-harness.workspace = true
+miter-mcp.workspace = true
+clap.workspace = true
+indicatif.workspace = true
+serde_json.workspace = true
+tracing-subscriber.workspace = true
+tokio = { workspace = true, features = ["rt"] }
+
+[dev-dependencies]
+miter-harness.workspace = true
+redb.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true
+
+[[test]]
+name = "harness"
+path = "tests/harness/main.rs"
+
+[profile.dev]
+opt-level = 0
+debug = 1
+
+[profile.test]
+opt-level = 0
+debug = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.test.package."*"]
+opt-level = 2
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

@@ -1,0 +1,25 @@
+[package]
+name = "miter-mcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Model Context Protocol (MCP) stdio server exposing AST hydration and compiler verification"
+readme = "../../README.md"
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+miter-engine = { workspace = true }
+miter-harness = { workspace = true }
+miter-storage = { workspace = true }
+tokio = { workspace = true, features = ["io-std", "io-util", "sync", "macros", "fs"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true
