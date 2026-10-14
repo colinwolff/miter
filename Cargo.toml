@@ -71,7 +71,10 @@ missing_debug_implementations = "warn"
 unreachable_pub = "warn"
 
 [package]
-name = "miter"
+# The *crate* is `miter-cli`: the bare name `miter` is taken on crates.io. The *binary* it
+# installs is still `miter` (declared below), so `cargo install miter-cli` leaves a `miter` on
+# `$PATH` and every command in the README is unchanged.
+name = "miter-cli"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -84,9 +87,34 @@ categories.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
+[lib]
+# Pinned to `miter` so the rename of the *package* does not rename the implicit library target:
+# `src/main.rs` calls `miter::cli::run()` and the doctests name `miter::…` paths, and a target
+# named `miter_cli` would break both without a single line of source changing.
+name = "miter"
+path = "src/lib.rs"
+
 [[bin]]
+# The installed command. This is the whole reason the package is `miter-cli`: the crate name is
+# free on crates.io, the command users type is not ours to change.
 name = "miter"
 path = "src/main.rs"
+
+# What `cargo binstall miter-cli` reads to find the GitHub Release archive. `pkg-url` spells the
+# asset out literally (`miter-v{version}-{target}.tar.gz`) rather than through `{ name }` or
+# `{ archive-format }`: the asset is named after the *binary* while `{ name }` would expand to the
+# *package*, and `{ archive-format }` expands to the format's name (`tgz`), which is not the
+# extension the release workflow writes. `bin-dir` is a path inside the archive and carries no
+# directory, so the released archives hold the binary at their root.
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/miter-v{ version }-{ target }.tar.gz"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+
+# The one target whose archive is not a tarball, so it overrides the URL as well as the format.
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/miter-v{ version }-{ target }.zip"
+pkg-fmt = "zip"
 
 [dependencies]
 miter-ast.workspace = true

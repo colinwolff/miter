@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes the older run's answer irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # `.cargo/config.toml` pins `-C target-cpu=native` for local iteration. On a runner it buys
+  # nothing and it makes the build fingerprint depend on which CPU GitHub happened to hand out,
+  # so it is cleared here. An *empty* `RUSTFLAGS` is still a set value, which is what outranks
+  # the config's `build.rustflags` — the flag is gone, not merely unset.
+  RUSTFLAGS: ""
+
+jobs:
+  gate:
+    name: fmt, clippy, test, dogfood
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install the stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache the registry and the target directory
+        uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt --all -- --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: cargo test --workspace --all-targets
+        run: cargo test --workspace --all-targets
+
+      # nextest runs no doctests, so the doc examples are a separate pass rather than a gap.
+      - name: cargo test --doc --workspace
+        run: cargo test --doc --workspace
+
+      # The tool indexes and audits *itself*: a workspace that cannot pass its own 250-line gate
+      # has no business enforcing it on anyone else's tree. `.miter/config.toml` is committed and
+      # sets `[audit] threshold = 250`, so the bare `audit` is the strict one.
+      - name: Dogfood — index this workspace
+        run: cargo run --bin miter -- index .
+
+      - name: Dogfood — audit this workspace
+        run: cargo run --bin miter -- audit

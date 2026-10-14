@@ -19,3 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Compiler Verification Gate (`miter verify`)**: Subprocess compiler diagnostic parser with optional git-worktree sandboxing.
 - **AST-Aware Secret Redaction**: Automatic scrubbing of sensitive identifiers, vendor API key prefixes, and high-entropy secrets at both the storage codec and MCP egress boundaries.
 - **MCP Server (`miter mcp`)**: Full JSON-RPC `stdio` server with automatic dirty-file refresh.
+- **Packaging & Distribution**: The CLI is published to crates.io as **`miter-cli`** (the bare name `miter` is taken) and installs the `miter` binary; per-target archives with `.sha256` checksums are attached to GitHub Releases and declared in `[package.metadata.binstall]` for `cargo binstall miter-cli`. GitHub Actions runs the fmt/clippy/test/dogfood gate on every push and publishes the release archives on a `v*` tag.

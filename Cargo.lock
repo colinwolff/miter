@@ -444,7 +444,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "miter"
+name = "miter-ast"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "indicatif",
+ "tree-sitter",
+ "tree-sitter-python",
+ "tree-sitter-rust",
+ "tree-sitter-typescript",
+]
+
+[[package]]
+name = "miter-cli"
 version = "0.1.0-alpha.1"
 dependencies = [
  "clap",
@@ -458,17 +469,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "miter-ast"
-version = "0.1.0-alpha.1"
-dependencies = [
- "indicatif",
- "tree-sitter",
- "tree-sitter-python",
- "tree-sitter-rust",
- "tree-sitter-typescript",
 ]
 
 [[package]]

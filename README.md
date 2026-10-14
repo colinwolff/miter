@@ -39,11 +39,39 @@ MCP response. A Kubernetes `secretKeyRef` is recorded as a *reference*
 
 ## Install
 
+The crate is published as **`miter-cli`** — the bare name `miter` was already taken on
+`crates.io` — and every route below installs a binary called **`miter`**.
+
+### Pre-built binaries
+
+Download the archive for your platform from the
+[Releases page](https://github.com/colinwolff/miter/releases), verify it against the `.sha256`
+beside it, and put `miter` (or `miter.exe`) on your `$PATH`:
+
+| Platform | Archive |
+|---|---|
+| macOS (Apple silicon) | `miter-v0.1.0-alpha.1-aarch64-apple-darwin.tar.gz` |
+| macOS (Intel) | `miter-v0.1.0-alpha.1-x86_64-apple-darwin.tar.gz` |
+| Linux (x86_64) | `miter-v0.1.0-alpha.1-x86_64-unknown-linux-gnu.tar.gz` |
+| Windows (x86_64) | `miter-v0.1.0-alpha.1-x86_64-pc-windows-msvc.zip` |
+
+### Via `cargo-binstall` (no compilation)
+
+```bash
+cargo binstall miter-cli@0.1.0-alpha.1
+```
+
+### From source, via `crates.io`
+
+```bash
+cargo install miter-cli --version 0.1.0-alpha.1 --locked
+```
+
+### From a checkout
+
 ```bash
 cargo install --path . --locked
 ```
-
-This installs the `miter` binary.
 
 ---
 
@@ -166,7 +194,7 @@ or `.git/` marker. Point `--db` at a different file to work in parallel.
 | `miter-storage` | Canonical `redb` tables, schema versioning and auto-purge recovery. |
 | `miter-harness` | Deterministic compiler verification and the ephemeral-worktree sandbox. |
 | `miter-mcp` | Model Context Protocol stdio server. |
-| `miter` (root) | The CLI binary. |
+| `miter-cli` (root) | The CLI binary, installed as the `miter` command. |
 
 ---
 
