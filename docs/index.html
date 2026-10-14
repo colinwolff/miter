@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>miter — X-ray vision for your AI coding agent</title>
+  <meta name="description" content="Local polyglot AST intelligence across 13 code, config and infrastructure formats: token-saving skeletons, safe file splits, schema contracts and automatic secret redaction." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="#hero">miter</a>
+      <ul class="nav-links">
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="#features">Pillars</a></li>
+        <li><a href="#formats">Formats</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="https://github.com/colinwolff/miter">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="hero" class="hero">
+      <p class="badge">v0.1.0-alpha.1 · Rust CLI &amp; MCP Server · Apache-2.0</p>
+      <h1>Give your AI coding agent X-ray vision instead of <code>grep</code>.</h1>
+      <p class="subtitle">Local polyglot AST intelligence across 13 code, config, and infrastructure formats. Cut LLM context tokens by 80%, split large files safely, catch SQL-to-TypeScript drift, and scrub secrets automatically.</p>
+      <div class="install">
+        <div class="tabs" role="tablist" aria-label="Install method">
+          <button class="tab is-active" data-command="cargo binstall miter-cli@0.1.0-alpha.1">cargo-binstall</button>
+          <button class="tab" data-command="cargo install miter-cli --version 0.1.0-alpha.1 --locked">cargo install</button>
+          <a class="tab" href="https://github.com/colinwolff/miter/releases">GitHub Releases</a>
+        </div>
+        <div class="copybox">
+          <code id="install-command">cargo binstall miter-cli@0.1.0-alpha.1</code>
+          <button class="copy" data-copy-target="install-command">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo" class="demo">
+      <h2>See it in action</h2>
+      <p class="lede">Four real outputs, captured from this repository. No mocks.</p>
+      <div class="tabs" role="tablist" aria-label="Demo">
+        <button class="tab demo-tab is-active" data-demo="skeleton">1 · Skeletons &amp; secrets</button>
+        <button class="tab demo-tab" data-demo="slice">2 · Safe file split</button>
+        <button class="tab demo-tab" data-demo="contracts">3 · Schema contracts</button>
+        <button class="tab demo-tab" data-demo="mcp">4 · MCP server</button>
+      </div>
+      <div class="panels">
+        <pre class="panel is-active" id="panel-skeleton">$ miter skeleton Containerfile
+    1  STAGE builder FROM rust:1.90
+    2  ARG CARGO_PROFILE=release
+    3  ARG REGISTRY_TOKEN=[REDACTED_SECRET]
+    4  ENV DATABASE_URL=[REDACTED_SECRET]
+    5  ENV PORT=8080
+    6  EXPOSE 8080
+    7  CMD ["./miter", "mcp"]
+
+$ miter skeleton docker-compose.yml
+    2  SERVICE api (image: miter:0.1.0-alpha.1)
+    5  ENV DATABASE_URL=[REDACTED_SECRET]
+    6  ENV STRIPE_SECRET_KEY=[REDACTED_SECRET]
+    7  ENV LOG_LEVEL=info
+
+$ miter skeleton src/cli/slice.rs
+pub enum SliceFormat { Human, Json }
+
+impl SliceFormat {
+    pub fn parse(s: &amp;str) -&gt; Self { /* ... */ }
+}
+
+pub fn run_slice(path: &amp;Path, target_lines: usize) -&gt; Result&lt;(), CliError&gt; { /* ... */ }</pre>
+
+        <pre class="panel" id="panel-slice">$ miter slice crates/mcp/src/handler/analysis.rs
+EXTRACTION BLUEPRINTS: Found 1 cluster(s) targeting ≤250 lines:
+
+=== Cluster #1 -&gt; crates/mcp/src/handler/analysis/handle_audit.rs ===
+  Source Lines: 10-181 (172 lines)
+  Symbols to Move: handle_audit, handle_slice, handle_skeleton, handle_references, handle_impact
+  Parent mod decl: mod handle_audit;
+  Suggested Exports: pub(crate) handle_audit, pub(crate) handle_slice, pub(crate) handle_skeleton, pub(crate) handle_references, pub(crate) handle_impact
+  Est. Remaining Lines in Parent: 13</pre>
+
+        <pre class="panel" id="panel-contracts">$ miter contracts
+Polyglot Contract Verification across SQL, Rust, and TypeScript
+================================================================================
+Verified Multi-Language Entities: 1
+Entities with Contract Drift:     1
+
+ENTITY                   FIELD                    DRIFT STATUS
+--------------------------------------------------------------------------------
+user                     created_at               in [rust, sql] but missing in [typescript]
+
+-- the three declarations, written months apart
+CREATE TABLE users (... created_at TEXT NOT NULL);
+pub struct User { ... pub created_at: String }
+export interface User { ... }          ← never got created_at</pre>
+
+        <pre class="panel" id="panel-mcp">$ miter mcp
+<span id="mcp-json">{
+  "mcpServers": {
+    "miter": { "command": "miter", "args": ["mcp"] }
+  }
+}</span>
+
+Claude Code · Cline · Cursor · Windsurf
+
+miter_lookup      symbol, module or crate API surface
+miter_skeleton    signatures with bodies stripped
+miter_references  reverse call sites
+miter_impact      multi-hop blast radius and affected tests
+miter_slice       seam-extraction blueprints
+miter_audit       line ceiling, dead code, cycles
+miter_verify      sliced compiler diagnostics
+
+Every tool call refreshes dirty files before it answers.
+<button class="copy" data-copy-target="mcp-json">Copy MCP config</button></pre>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <h2>Five pillars</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Context window savings</h3>
+          <p class="without">An agent reads a whole 800-line file just to see its signatures.</p>
+          <p class="with"><code>miter skeleton</code> returns signatures and line numbers; <code>miter lookup</code> fetches one symbol plus its neighbours.</p>
+        </article>
+        <article class="card">
+          <h3>Safe modularity slicing</h3>
+          <p class="without">Splitting a bloated file by hand yields circular imports and missing <code>pub</code> modifiers.</p>
+          <p class="with"><code>miter slice</code> names the seam and the exact <code>pub(crate)</code> elevations; <code>miter audit</code> holds the ceiling.</p>
+        </article>
+        <article class="card">
+          <h3>Cross-stack type contracts</h3>
+          <p class="without">A new SQL column and Rust field, but the TypeScript interface never got it.</p>
+          <p class="with"><code>miter contracts</code> compares SQL tables, Rust structs and TypeScript interfaces field by field.</p>
+        </article>
+        <article class="card">
+          <h3>Reverse call-graph impact</h3>
+          <p class="without">grep returns noisy comments, unrelated substrings and misses multi-hop callers.</p>
+          <p class="with"><code>miter impact</code> walks the reverse call graph and lists the tests to run, with their commands.</p>
+        </article>
+        <article class="card">
+          <h3>AST-aware secret redaction</h3>
+          <p class="without">An agent reading <code>.env</code>, a Dockerfile or a manifest pulls raw credentials into the prompt.</p>
+          <p class="with">Every signature, body and MCP response is scrubbed: keys, <code>sk_live_...</code> tokens and high-entropy strings become <code>[REDACTED_SECRET]</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="formats" class="formats">
+      <h2>13 supported formats</h2>
+      <ul class="format-grid">
+        <li><strong>Rust</strong> <span>.rs</span></li>
+        <li><strong>TypeScript</strong> <span>.ts .mts .cts .d.ts</span></li>
+        <li><strong>TSX</strong> <span>.tsx</span></li>
+        <li><strong>JavaScript</strong> <span>.js .jsx .mjs .cjs</span></li>
+        <li><strong>Python</strong> <span>.py .pyi</span></li>
+        <li><strong>SQL</strong> <span>.sql</span></li>
+        <li><strong>HTML</strong> <span>.html .htm</span></li>
+        <li><strong>CSS / SCSS</strong> <span>.css .scss</span></li>
+        <li><strong>Dockerfile / Containerfile</strong> <span>Dockerfile, *.dockerfile</span></li>
+        <li><strong>Kubernetes &amp; Compose</strong> <span>.yaml .yml</span></li>
+        <li><strong>HCL / OpenTofu</strong> <span>.tf .tofu</span></li>
+        <li><strong>Markdown</strong> <span>.md .markdown</span></li>
+        <li><strong>Environment keys</strong> <span>.env .env.*</span></li>
+      </ul>
+    </section>
+
+    <section id="commands" class="commands">
+      <h2>CLI and MCP reference</h2>
+      <table>
+        <thead>
+          <tr><th>Command</th><th>What it does</th><th>MCP tool</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>index &lt;PATH&gt;</code></td><td>Build the workspace index</td><td>—</td></tr>
+          <tr><td><code>lookup &lt;SYMBOL&gt;</code></td><td>Hydrate one declaration</td><td>miter_lookup</td></tr>
+          <tr><td><code>skeleton &lt;PATH&gt;</code></td><td>Signatures with bodies stripped</td><td>miter_skeleton</td></tr>
+          <tr><td><code>references &lt;SYMBOL&gt;</code></td><td>Reverse call sites</td><td>miter_references</td></tr>
+          <tr><td><code>impact &lt;SYMBOL&gt;</code></td><td>Blast radius and affected tests</td><td>miter_impact</td></tr>
+          <tr><td><code>slice &lt;PATH&gt;</code></td><td>Seam-extraction blueprints</td><td>miter_slice</td></tr>
+          <tr><td><code>audit</code></td><td>Line ceiling, hygiene, cycles</td><td>miter_audit</td></tr>
+          <tr><td><code>contracts</code></td><td>SQL, Rust and TypeScript drift</td><td>—</td></tr>
+          <tr><td><code>clones</code></td><td>SimHash structural clones</td><td>—</td></tr>
+          <tr><td><code>verify</code></td><td>Sliced compiler diagnostics</td><td>miter_verify</td></tr>
+          <tr><td><code>mcp</code></td><td>JSON-RPC 2.0 stdio server</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><strong>miter</strong> — deterministic AST co-processor and MCP server. Apache-2.0.</p>
+    <p>
+      <a href="https://github.com/colinwolff/miter">github.com/colinwolff/miter</a> ·
+      <a href="https://crates.io/crates/miter-cli">crates.io/crates/miter-cli</a>
+    </p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

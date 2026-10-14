@@ -1,0 +1,197 @@
+/* ==== miter landing page — dark, dependency free ==== */
+
+:root {
+  --bg-primary: #0b0f17;
+  --bg-elevated: #0e1420;
+  --bg-card: #111827;
+  --bg-term: #070a11;
+  --border-subtle: #1f2a3a;
+  --border-strong: #2c3b53;
+  --text-main: #e6edf7;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --brand-accent: #34d399;
+  --brand-warn: #fbbf24;
+  --brand-info: #22d3ee;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --maxw: 1080px;
+  --gutter: 1.25rem;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0 0 .75rem; line-height: 1.2; letter-spacing: -.02em; }
+h1 { font-size: clamp(1.8rem, 4.4vw, 3rem); }
+h2 { font-size: clamp(1.35rem, 2.6vw, 1.9rem); }
+h3 { font-size: 1.05rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--brand-info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: .9em; color: var(--brand-warn); }
+
+/* ==== Header ==== */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 15, 23, .88);
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: .7rem var(--gutter);
+}
+
+.brand { font-family: var(--mono); font-weight: 700; font-size: 1.15rem; color: var(--brand-accent); }
+
+.nav-links { display: flex; gap: 1rem; margin: 0; padding: 0; list-style: none; font-size: .9rem; }
+.nav-links a { color: var(--text-muted); }
+.nav-links a:hover { color: var(--text-main); text-decoration: none; }
+
+/* ==== Layout ==== */
+
+main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) 3rem; }
+section { padding: 3rem 0 1.5rem; border-bottom: 1px solid var(--border-subtle); }
+.lede { color: var(--text-muted); }
+
+/* ==== Hero ==== */
+
+.badge {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: .3rem .7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--brand-accent);
+  font-family: var(--mono);
+  font-size: .78rem;
+}
+
+.subtitle { max-width: 60ch; color: var(--text-muted); font-size: 1.05rem; }
+
+/* ==== Tabs, copy box, terminal ==== */
+
+.tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+
+.tab {
+  padding: .45rem .8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.tab:hover { color: var(--text-main); border-color: var(--border-strong); }
+.tab.is-active { color: var(--bg-primary); background: var(--brand-accent); border-color: var(--brand-accent); font-weight: 600; }
+
+.copybox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-term);
+}
+
+.copybox code { color: var(--brand-info); font-size: .9rem; word-break: break-all; }
+
+.copy {
+  flex: none;
+  padding: .4rem .75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.copy:hover { border-color: var(--brand-accent); color: var(--brand-accent); }
+
+.panel {
+  display: none;
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-term);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: .82rem;
+  line-height: 1.65;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.panel.is-active { display: block; }
+.panel .copy { display: block; margin-top: .9rem; }
+
+/* ==== Pillars, formats, commands ==== */
+
+.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+.card { padding: 1.1rem 1.2rem; border: 1px solid var(--border-subtle); border-radius: var(--radius); background: var(--bg-card); }
+.card p { margin: 0; font-size: .88rem; }
+.without { color: var(--brand-warn); }
+.with { margin-top: .5rem !important; color: var(--brand-accent); }
+
+.without::before, .with::before { color: var(--text-dim); font-family: var(--mono); font-size: .76rem; }
+.without::before { content: "WITHOUT — "; }
+.with::before { content: "WITH — "; }
+
+.format-grid { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 0; padding: 0; list-style: none; }
+.format-grid li { padding: .55rem .75rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-card); font-size: .88rem; }
+.format-grid span { color: var(--text-dim); font-family: var(--mono); font-size: .78rem; }
+
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th, td { padding: .6rem .7rem; border-bottom: 1px solid var(--border-subtle); text-align: left; }
+th { color: var(--text-dim); font-family: var(--mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+td:last-child { color: var(--brand-info); font-family: var(--mono); font-size: .8rem; }
+tbody tr:hover { background: var(--bg-card); }
+
+/* ==== Footer ==== */
+
+.site-footer { max-width: var(--maxw); margin: 0 auto; padding: 2rem var(--gutter) 3rem; color: var(--text-dim); font-size: .85rem; }
+.site-footer p { margin: 0 0 .35rem; }
+
+/* ==== Responsive ==== */
+
+@media (max-width: 620px) {
+  section { padding: 2.25rem 0 1rem; }
+  .nav { flex-wrap: wrap; }
+  .nav-links { gap: .75rem; font-size: .82rem; }
+  .copybox { flex-direction: column; align-items: stretch; }
+  .copy { width: 100%; }
+  .panel { font-size: .74rem; }
+}
